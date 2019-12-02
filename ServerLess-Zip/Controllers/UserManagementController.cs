@@ -1,12 +1,9 @@
-using Amazon;
-using Amazon.DynamoDBv2;
-using Amazon.DynamoDBv2.DataModel;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ServerLess_Zip.Model;
 using ServerLess_Zip.Services;
+using ServerLess_Zip.Util;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -21,55 +18,27 @@ namespace ServerLess_Zip.Controllers
     [ApiController]
     public class UserManagementController : Controller
     {
-        private IAmazonDynamoDB DDBClient { get; set; }
+
         private ILogger Logger { get; set; }
-        private IDynamoDBContext DDBContext { get; set; }
-        private string UserTableName { get; set; }
         private IUserService UserService { get; set; }
 
-        private static bool IsValidEmailAddress(string emailAddress)
-        {
-            return new System.ComponentModel.DataAnnotations
-                                .EmailAddressAttribute()
-                                .IsValid(emailAddress);
-        }
-
-        public UserManagementController(IConfiguration configuration, ILogger<UserManagementController> logger, IAmazonDynamoDB ddbClient, IUserService userService)
+        public UserManagementController( ILogger<UserManagementController> logger, IUserService userService)
         {
             Logger = logger;
-            DDBClient = ddbClient;
             UserService = userService;
 
-            UserTableName = configuration[Startup.AppDDBTableKey];
-            if (string.IsNullOrEmpty(UserTableName))
-            {
-                Logger.LogCritical("Missing configuration for DDB UserTable. The AppDDBTable configuration must be set to a DDB UserTable.");
-                throw new Exception("Missing configuration for DDB UserTable. The AppDDBTable configuration must be set to a DDB UserTable.");
-            }
-            else
-            {
-                AWSConfigsDynamoDB.Context.TypeMappings[typeof(User)] = new Amazon.Util.TypeMapping(typeof(User), UserTableName);
-            }
-
-            var config = new DynamoDBContextConfig { Conversion = DynamoDBEntryConversion.V2 };
-            DDBContext = new DynamoDBContext(ddbClient, config);
-
-            logger.LogInformation($"Configured to use the table: {UserTableName}");
         }
 
         [HttpGet]
         [Route("listusers")]
         [ProducesResponseType(typeof(List<User>), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-        public async Task<ActionResult> GetUsers()
+        public async Task<ActionResult<List<User>>> GetUsers()
         {
             try
             {
-                Logger.LogDebug("Getting the users");
-                var search = DDBContext.ScanAsync<User>(null);
-                var page = await search.GetNextSetAsync();
-                Logger.LogDebug($"Found {page.Count} users");
-                return Ok(page); ;
+                var users = await UserService.GetAllUsers();
+                return Ok(users); ;
             }
             catch (Exception ex)
             {
@@ -87,22 +56,21 @@ namespace ServerLess_Zip.Controllers
         {
             try
             {
-                user.EmailAddress = user.EmailAddress.ToLower();
-                if (UserService.GetUserByEmail(user.EmailAddress).Result != null)
-                {
-                    return  BadRequest($"Cannot create user, as user with email {user.EmailAddress} already exists");
-                }
-                Logger.LogInformation($"Incoming user object: {JsonConvert.SerializeObject(user)}");
 
                 if (!ModelState.IsValid)
                 {
                     return BadRequest();
                 }
+                Logger.LogInformation($"Incoming user: {JsonConvert.SerializeObject(user)}");
 
-                Logger.LogInformation($"Creation for User: {user.EmailAddress} started.");
-                Logger.LogInformation($"Saving User: {user.EmailAddress}");
+                user.EmailAddress = user.EmailAddress.ToLower();
+                if (UserService.GetUserByEmail(user.EmailAddress).Result != null)
+                {
+                    return  BadRequest($"Cannot create user, as user with email {user.EmailAddress} already exists");
+                }
+                
 
-                await DDBContext.SaveAsync<User>(user);
+                await UserService.CreateUser(user);
 
                 return CreatedAtAction(null, user.EmailAddress);
             }
@@ -122,7 +90,7 @@ namespace ServerLess_Zip.Controllers
             try
             {
 
-                if (string.IsNullOrWhiteSpace(email) || !IsValidEmailAddress(email))
+                if (string.IsNullOrWhiteSpace(email) || !ValidateEmailAddress.IsValidEmailAddress(email))
                 {
                     return BadRequest("Please provide a valid email address");
                 }

@@ -56,5 +56,31 @@ namespace ServerLess_Zip.Services
 
             return user;
         }
+
+
+        /// <summary>
+        /// Gets the list of users from DDB
+        /// </summary>
+        /// <returns></returns>
+        public Task<List<User>> GetAllUsers()
+        {
+            Logger.LogDebug("Getting the users");
+            var search = DDBContext.ScanAsync<User>(null);
+            var page =  search.GetNextSetAsync();
+            return page;
+        }
+
+        /// <summary>
+        /// Method to create users. This method would not do any validations. Validations are segregated at controller level
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns></returns>
+        public Task CreateUser(User user)
+        {
+            Logger.LogInformation($"Creation for User: {user.EmailAddress} started.");
+            Logger.LogInformation($"Saving User: {user.EmailAddress}");
+
+            return DDBContext.SaveAsync<User>(user);
+        }
     }
 }

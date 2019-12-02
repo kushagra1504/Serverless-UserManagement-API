@@ -10,11 +10,10 @@ namespace ServerLess_Zip.Model
     public string EmailAddress { get; set; }
 
     [Required]
-    [Range(0, 1000, ErrorMessage = "Zip allows credit upto 1000$.")]
-    public decimal CreditTaken { get; set; }
+    [Range(0, 1000, ErrorMessage = "We allow credit upto 1000$.")]
+    public double CreditTaken { get; set; }
 
     [Required]
-    [Range(0, 1000, ErrorMessage = "Zip allows credit upto 1000$.")]
-    public decimal BalanceAvailable { get; set; }
+    public double AvailableSurplus { get; set; }
 }
 }

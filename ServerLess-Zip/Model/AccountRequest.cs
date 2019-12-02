@@ -9,7 +9,7 @@ namespace ServerLess_Zip.Model
         public string EmailAddress { get; set; }
 
         [Required]
-        [Range(0, 1000, ErrorMessage = "Zip allows credit upto 1000$.")]
-        public decimal CreditRequested { get; set; }
+        [Range(0, 1000, ErrorMessage = "We allow credit upto 1000$.")]
+        public double CreditRequested { get; set; }
     }
 }

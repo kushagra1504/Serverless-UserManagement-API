@@ -33,6 +33,7 @@ namespace ServerLess_Zip
             // Add Dynamo to the ASP.NET Core dependency injection framework.
             services.AddAWSService<Amazon.DynamoDBv2.IAmazonDynamoDB>();
             services.AddTransient<IUserService, UserService>();
+            services.AddTransient<IAccountService, AccountService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline
