@@ -12,7 +12,7 @@
     "framework"     : "netcoreapp2.1",
     "DDB-prefix"    : "ServerLess-Zip/",
     "template"      : "serverless.template",
-    "template-parameters" : "\"ShouldCreateUserTable\"=\"true\";\"UserTableName\"=\"Users\"",
+    "template-parameters" : "\"ShouldCreateUserTable\"=\"true\";\"UserTableName\"=\"Users\";\"ShouldCreateAccountTable\"=\"true\";\"AccountTableName\"=\"Accounts\";\"ReadCapacity\"=\"5\";\"WriteCapacity\"=\"5\"",
     "s3-bucket"           : "kush-longterm-bucket",
     "stack-name"          : "serverless-zip-usrmgmt"
 }

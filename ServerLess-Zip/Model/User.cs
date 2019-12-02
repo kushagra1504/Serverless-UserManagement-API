@@ -20,5 +20,6 @@ namespace ServerLess_Zip.Model
         [Required]
         [Range(0, double.MaxValue, ErrorMessage = "Expenses should be a positive value")]
         public double MonthlyExpenses { get; set; }
+
     }
 }

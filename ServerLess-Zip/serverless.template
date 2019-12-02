@@ -17,16 +17,29 @@
       "Description": "Name of DDB UserTable that will be proxied. If left blank a name will be generated.",
       "MinLength": "0"
     },
+	"ShouldCreateAccountTable": {
+      "Type": "String",
+      "AllowedValues": [
+        "true",
+        "false"
+      ],
+      "Description": "If true then the DDB AccountTable that will be proxied will be created with the CloudFormation stack."
+    },
+	 "AccountTableName": {
+      "Type": "String",
+      "Description": "Name of DDB AccountTable that will be proxied. If left blank a name will be generated.",
+      "MinLength": "0"
+    },
 	 "ReadCapacity" : {
         "Type" : "Number",
-        "Description" : "Read capacity for the DynamoDB blog table.",
-        "Default" : "3",
+        "Description" : "Read capacity for the DynamoDB tables.",
+        "Default" : "5",
         "MinValue" : 1
     },
     "WriteCapacity" : {
         "Type" : "Number",
-        "Description" : "Write capacity for the DynamoDB blog table.",
-        "Default" : "3",
+        "Description" : "Write capacity for the DynamoDB tables.",
+        "Default" : "5",
         "MinValue" : 1
     }
   },
@@ -46,6 +59,22 @@
         },
         ""
       ]
+    },
+	 "CreateDDBAccountTable": {
+      "Fn::Equals": [
+        {
+          "Ref": "ShouldCreateAccountTable"
+        },
+        "true"
+      ]
+    },
+    "AccountTableNameGenerated": {
+      "Fn::Equals": [
+        {
+          "Ref": "AccountTableName"
+        },
+        ""
+      ]
     }
   },
 
@@ -56,7 +85,7 @@
         "Handler": "ServerLess-Zip::ServerLess_Zip.LambdaEntryPoint::FunctionHandlerAsync",
         "Runtime": "dotnetcore2.1",
         "CodeUri": "",
-        "MemorySize": 256,
+        "MemorySize": 512,
         "Timeout": 30,
         "Role": null,
         "Policies": [
@@ -64,6 +93,17 @@
         ],
         "Environment": {
           "Variables": {
+		  "AppDDBAccountTable": {
+              "Fn::If": [
+                "CreateDDBUserTable",
+                {
+                  "Ref": "AccountTable"
+                },
+                {
+                  "Ref": "AccountTableName"
+                }
+              ]
+            },
             "AppDDBTable": {
               "Fn::If": [
                 "CreateDDBUserTable",
@@ -74,7 +114,7 @@
                   "Ref": "UserTableName"
                 }
               ]
-            }
+            } 
           }
         },
         "Events": {
@@ -122,6 +162,34 @@
                 "WriteCapacityUnits" : { "Ref" : "WriteCapacity" }
             }
       }
+    },
+	"AccountTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "Condition": "CreateDDBAccountTable",
+      "Properties": {
+        "TableName": {
+          "Fn::If": [
+            "AccountTableNameGenerated",
+            {
+              "Ref": "AWS::NoValue"
+            },
+            {
+              "Ref": "AccountTableName"
+            }
+          ]
+        },
+		"AttributeDefinitions" : [
+              {"AttributeName" : "EmailAddress", "AttributeType" : "S"}
+			  
+            ],
+            "KeySchema"            : [
+              {"AttributeName" : "EmailAddress", "KeyType" : "HASH"}
+            ],
+            "ProvisionedThroughput" : {
+                "ReadCapacityUnits" : { "Ref" : "ReadCapacity" },
+                "WriteCapacityUnits" : { "Ref" : "WriteCapacity" }
+            }
+      }
     }
   },
 
@@ -141,6 +209,19 @@
           },
           {
             "Ref": "UserTableName"
+          }
+        ]
+      }
+    },
+	  "DDBProxyAccountTable": {
+      "Value": {
+        "Fn::If": [
+          "CreateDDBAccountTable",
+          {
+            "Ref": "AccountTable"
+          },
+          {
+            "Ref": "AccountTableName"
           }
         ]
       }

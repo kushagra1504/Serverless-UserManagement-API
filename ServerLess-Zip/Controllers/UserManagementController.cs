@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ServerLess_Zip.Model;
+using ServerLess_Zip.Services;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -24,6 +25,7 @@ namespace ServerLess_Zip.Controllers
         private ILogger Logger { get; set; }
         private IDynamoDBContext DDBContext { get; set; }
         private string UserTableName { get; set; }
+        private IUserService UserService { get; set; }
 
         private static bool IsValidEmailAddress(string emailAddress)
         {
@@ -32,10 +34,11 @@ namespace ServerLess_Zip.Controllers
                                 .IsValid(emailAddress);
         }
 
-        public UserManagementController(IConfiguration configuration, ILogger<UserManagementController> logger, IAmazonDynamoDB ddbClient)
+        public UserManagementController(IConfiguration configuration, ILogger<UserManagementController> logger, IAmazonDynamoDB ddbClient, IUserService userService)
         {
             Logger = logger;
             DDBClient = ddbClient;
+            UserService = userService;
 
             UserTableName = configuration[Startup.AppDDBTableKey];
             if (string.IsNullOrEmpty(UserTableName))
@@ -85,7 +88,7 @@ namespace ServerLess_Zip.Controllers
             try
             {
                 user.EmailAddress = user.EmailAddress.ToLower();
-                if (GetUserByEmail(user.EmailAddress).Result != null)
+                if (UserService.GetUserByEmail(user.EmailAddress).Result != null)
                 {
                     return  BadRequest($"Cannot create user, as user with email {user.EmailAddress} already exists");
                 }
@@ -124,7 +127,7 @@ namespace ServerLess_Zip.Controllers
                     return BadRequest("Please provide a valid email address");
                 }
 
-                var user = await GetUserByEmail(email);
+                var user = await UserService.GetUserByEmail(email);
                 if (user == null)
                 {
                     return NotFound();
@@ -139,20 +142,6 @@ namespace ServerLess_Zip.Controllers
                 return BadRequest();
             }
         }
-
-
-        private Task<User> GetUserByEmail(string email)
-        {
-
-            Logger.LogInformation($"Getting user details with {email}.");
-
-            var user = DDBContext.LoadAsync<User>(email.ToLower());
-
-            Logger.LogInformation($"Found user: {user != null}");
-
-            return user;
-        }
-
 
     }
 }

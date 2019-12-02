@@ -8,12 +8,14 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using ServerLess_Zip.Services;
 
 namespace ServerLess_Zip
 {
     public class Startup
     {
         public const string AppDDBTableKey = "AppDDBTable";
+        public const string AppDDBAccountTableKey = "AppDDBAccountTable";
 
         public Startup(IConfiguration configuration)
         {
@@ -30,6 +32,7 @@ namespace ServerLess_Zip
             
             // Add Dynamo to the ASP.NET Core dependency injection framework.
             services.AddAWSService<Amazon.DynamoDBv2.IAmazonDynamoDB>();
+            services.AddTransient<IUserService, UserService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline
