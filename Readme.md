@@ -78,13 +78,13 @@ If already installed check if new version is available.
 
 Execute unit tests
 ```
-    cd "ServerLess-Zip/test/ServerLess-Zip.Tests"
+    cd "ServerLess-Zip.Tests"
     dotnet test
 ```
 
 Deploy application
 ```
-    cd "ServerLess-Zip/src/ServerLess-Zip"
+    cd "ServerLess-Zip"
     dotnet lambda deploy-serverless
 ```
 

@@ -1,44 +1,61 @@
-using Amazon.DynamoDBv2;
-using Amazon.DynamoDBv2.Model;
-using Microsoft.Extensions.Configuration;
-using System;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Moq;
+using ServerLess_Zip.Controllers;
+using ServerLess_Zip.Model;
+using ServerLess_Zip.Services;
 using System.Collections.Generic;
-using System.IO;
+using System.Threading.Tasks;
+using Xunit;
+using FluentAssertions;
 
 namespace ServerLess_Zip.Tests
 {
-    public class UserManagementControllerTests 
+    public class UserManagementControllerTests
     {
-        string UserTableName { get; set; }
-        IAmazonDynamoDB DDBClient { get; set; }
-
-        IConfigurationRoot Configuration { get; set; }
 
 
-        public UserManagementControllerTests()
+        private User GetUserTestData()
         {
-            var builder = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
-
-            this.Configuration = builder.Build();
-
-            // Use the region and possible profile specified in the appsettings.json file to construct an Amaozn S3 service client.
-            this.DDBClient = Configuration.GetAWSOptions().CreateServiceClient<IAmazonDynamoDB>();
-
-            // Create a UserTable used for the test which will be deleted along with any data in the UserTable once the test is complete.
-            this.UserTableName = "lambda-UserManagementControllerTests-".ToLower() + DateTime.Now.Ticks;
-            this.DDBClient.CreateTableAsync(
-                this.UserTableName,
-                new List<KeySchemaElement>
-                {
-                    new KeySchemaElement { KeyType = KeyType.HASH, AttributeName = "EmailAddress" }
-                },
-                new List<AttributeDefinition>
-                {
-                    new AttributeDefinition { AttributeName = "EmailAddress", AttributeType = ScalarAttributeType.S }
-                },
-                new ProvisionedThroughput { ReadCapacityUnits = 3, WriteCapacityUnits = 3 }).Wait();
+            return new User
+            {
+                EmailAddress = "kush@kushagra.ga",
+                MonthlySalary = 15000,
+                MonthlyExpenses = 7500,
+                Name = "Kushagra"
+            };
         }
+
+        [Fact]
+        public async Task user_management_controller_getusers_calls_service_getallusers()
+        {
+            var loggerServiceMock = new Mock<ILogger<UserManagementController>>();
+            var userServiceMock = new Mock<IUserService>();
+            userServiceMock.Setup(svc => svc.GetAllUsers()).ReturnsAsync(new List<User>());
+            var controller = new UserManagementController(loggerServiceMock.Object, userServiceMock.Object);
+
+            var result = await controller.GetUsers();
+            result.Should().NotBeNull();
+
+            userServiceMock.Verify(svc => svc.GetAllUsers(), Times.Once);
+        }
+
+
+        [Fact]
+        public async Task user_management_controller_create_users_calls_service_create()
+        {
+            var testAccountData = GetUserTestData();
+            var userServiceMock = new Mock<IUserService>();
+            var loggerServiceMock = new Mock<ILogger<UserManagementController>>();
+            var controller = new UserManagementController(loggerServiceMock.Object, userServiceMock.Object);
+
+            var result = await controller.CreateUserAsync(testAccountData);
+
+            var contentResult = result as ObjectResult;
+            contentResult.Should().NotBeNull();
+
+            userServiceMock.Verify(svc => svc.GetUserByEmail(testAccountData.EmailAddress), Times.Once);
+        }
+
     }
 }
