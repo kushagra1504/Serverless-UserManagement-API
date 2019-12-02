@@ -87,3 +87,91 @@ Deploy application
     cd "ServerLess-Zip/src/ServerLess-Zip"
     dotnet lambda deploy-serverless
 ```
+
+## The Endpoints ##
+Following are the curl commands for testing each end points exposed by the API.
+
+### List Users ###
+```
+curl -X GET https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/listusers
+eg : curl -X GET https://ycx5xkpkqa.execute-api.ap-southeast-2.amazonaws.com/Prod/listusers
+```
+
+### Create User ###
+```
+curl -X POST \
+  https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/createuser \
+  -H 'Content-Type: application/json' \
+  -H 'cache-control: no-cache' \
+  -d '{
+  "Name": "{userName}",
+  "EmailAddress": "{userEmail}",
+  "MonthlySalary": {SalaryInDigits},
+  "MonthlyExpenses": {MonthlyExpensesInDigits}
+}'
+
+eg : curl -X POST \
+  https://ycx5xkpkqa.execute-api.ap-southeast-2.amazonaws.com/Prod/createuser \
+  -H 'Content-Type: application/json' \
+  -H 'cache-control: no-cache' \
+  -d '{
+  "Name": "kush_test",
+  "EmailAddress": "testkush@kushagra.ga",
+  "MonthlySalary": 20000,
+  "MonthlyExpenses": 6000.50
+}'
+```
+
+### Get User by Email ###
+```
+curl -X GET \
+  https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getuser/{userEmail}\
+  -H 'cache-control: no-cache'
+
+eg : curl -X GET \
+  https://ycx5xkpkqa.execute-api.ap-southeast-2.amazonaws.com/Prod/getuser/tiwari.kushagra@gmail.com \
+  -H 'cache-control: no-cache'
+```
+
+### List Accounts ###
+```
+curl -X GET \
+  https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/listaccounts \
+  -H 'cache-control: no-cache'
+  
+eg : curl -X GET \
+  https://ycx5xkpkqa.execute-api.ap-southeast-2.amazonaws.com/Prod/listaccounts \
+  -H 'cache-control: no-cache'
+```
+
+### Create Account ###
+```
+curl -X POST \
+  https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/createaccount \
+  -H 'Content-Type: application/json' \
+  -H 'cache-control: no-cache' \
+  -d '{
+  "EmailAddress": "{emailAddress}",
+  "CreditRequested": {CreditRequestInDigits}
+}'
+
+eg : curl -X POST \
+  https://ycx5xkpkqa.execute-api.ap-southeast-2.amazonaws.com/Prod/createaccount \
+  -H 'Content-Type: application/json' \
+  -H 'cache-control: no-cache' \
+  -d '{
+  "EmailAddress": "test@kushagraa.ga",
+  "CreditRequested": 55.64
+}'
+```
+
+### Get Account by Email ###
+```
+curl -X GET \
+  https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getaccount/{userEmail} \
+  -H 'cache-control: no-cache'
+
+eg : curl -X GET \
+  https://ycx5xkpkqa.execute-api.ap-southeast-2.amazonaws.com/Prod/getaccount/test@kushagra.ga \
+  -H 'cache-control: no-cache'
+```
