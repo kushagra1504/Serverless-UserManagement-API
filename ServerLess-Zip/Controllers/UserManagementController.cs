@@ -85,6 +85,10 @@ namespace ServerLess_Zip.Controllers
             try
             {
                 user.EmailAddress = user.EmailAddress.ToLower();
+                if (GetUserByEmail(user.EmailAddress).Result != null)
+                {
+                    return  BadRequest($"Cannot create user, as user with email {user.EmailAddress} already exists");
+                }
                 Logger.LogInformation($"Incoming user object: {JsonConvert.SerializeObject(user)}");
 
                 if (!ModelState.IsValid)
@@ -103,7 +107,7 @@ namespace ServerLess_Zip.Controllers
             catch (Exception ex)
             {
                 Logger.LogError($"Error occurred when creating user:{user.EmailAddress}.", ex.Message);
-                return BadRequest();
+                return BadRequest(ex.Message);
             }
         }
 
@@ -114,18 +118,13 @@ namespace ServerLess_Zip.Controllers
         {
             try
             {
+
                 if (string.IsNullOrWhiteSpace(email) || !IsValidEmailAddress(email))
                 {
                     return BadRequest("Please provide a valid email address");
                 }
-                
 
-                Logger.LogInformation($"Getting user details with {email}.");
-
-                var user = await DDBContext.LoadAsync<User>(email.ToLower());
-
-                Logger.LogInformation($"Found user: {user != null}");
-
+                var user = await GetUserByEmail(email);
                 if (user == null)
                 {
                     return NotFound();
@@ -141,6 +140,18 @@ namespace ServerLess_Zip.Controllers
             }
         }
 
+
+        private Task<User> GetUserByEmail(string email)
+        {
+
+            Logger.LogInformation($"Getting user details with {email}.");
+
+            var user = DDBContext.LoadAsync<User>(email.ToLower());
+
+            Logger.LogInformation($"Found user: {user != null}");
+
+            return user;
+        }
 
 
     }
