@@ -1,0 +1,149 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Transform": "AWS::Serverless-2016-10-31",
+  "Description": "An AWS Serverless Application that uses the ASP.NET Core framework running in Amazon Lambda.",
+
+  "Parameters": {
+    "ShouldCreateUserTable": {
+      "Type": "String",
+      "AllowedValues": [
+        "true",
+        "false"
+      ],
+      "Description": "If true then the DDB UserTable that will be proxied will be created with the CloudFormation stack."
+    },
+    "UserTableName": {
+      "Type": "String",
+      "Description": "Name of DDB UserTable that will be proxied. If left blank a name will be generated.",
+      "MinLength": "0"
+    },
+	 "ReadCapacity" : {
+        "Type" : "Number",
+        "Description" : "Read capacity for the DynamoDB blog table.",
+        "Default" : "3",
+        "MinValue" : 1
+    },
+    "WriteCapacity" : {
+        "Type" : "Number",
+        "Description" : "Write capacity for the DynamoDB blog table.",
+        "Default" : "3",
+        "MinValue" : 1
+    }
+  },
+  "Conditions": {
+    "CreateDDBUserTable": {
+      "Fn::Equals": [
+        {
+          "Ref": "ShouldCreateUserTable"
+        },
+        "true"
+      ]
+    },
+    "UserTableNameGenerated": {
+      "Fn::Equals": [
+        {
+          "Ref": "UserTableName"
+        },
+        ""
+      ]
+    }
+  },
+
+  "Resources": {
+    "AspNetCoreFunction": {
+      "Type": "AWS::Serverless::Function",
+      "Properties": {
+        "Handler": "ServerLess-Zip::ServerLess_Zip.LambdaEntryPoint::FunctionHandlerAsync",
+        "Runtime": "dotnetcore2.1",
+        "CodeUri": "",
+        "MemorySize": 256,
+        "Timeout": 30,
+        "Role": null,
+        "Policies": [
+          "AWSLambdaFullAccess"
+        ],
+        "Environment": {
+          "Variables": {
+            "AppDDBTable": {
+              "Fn::If": [
+                "CreateDDBUserTable",
+                {
+                  "Ref": "UserTable"
+                },
+                {
+                  "Ref": "UserTableName"
+                }
+              ]
+            }
+          }
+        },
+        "Events": {
+          "ProxyResource": {
+            "Type": "Api",
+            "Properties": {
+              "Path": "/{proxy+}",
+              "Method": "ANY"
+            }
+          },
+          "RootResource": {
+            "Type": "Api",
+            "Properties": {
+              "Path": "/",
+              "Method": "ANY"
+            }
+          }
+        }
+      }
+    },
+
+    "UserTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "Condition": "CreateDDBUserTable",
+      "Properties": {
+        "TableName": {
+          "Fn::If": [
+            "UserTableNameGenerated",
+            {
+              "Ref": "AWS::NoValue"
+            },
+            {
+              "Ref": "UserTableName"
+            }
+          ]
+        },
+		"AttributeDefinitions" : [
+              {"AttributeName" : "EmailAddress", "AttributeType" : "S"}
+            ],
+            "KeySchema"            : [
+              {"AttributeName" : "EmailAddress", "KeyType" : "HASH"}
+            ],
+            "ProvisionedThroughput" : {
+                "ReadCapacityUnits" : { "Ref" : "ReadCapacity" },
+                "WriteCapacityUnits" : { "Ref" : "WriteCapacity" }
+            }
+      }
+    }
+  },
+
+  "Outputs": {
+    "ApiURL": {
+      "Description": "API endpoint URL for Prod environment",
+      "Value": {
+        "Fn::Sub": "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+      }
+    },
+    "DDBProxyUserTable": {
+      "Value": {
+        "Fn::If": [
+          "CreateDDBUserTable",
+          {
+            "Ref": "UserTable"
+          },
+          {
+            "Ref": "UserTableName"
+          }
+        ]
+      }
+    }
+  }
+}
