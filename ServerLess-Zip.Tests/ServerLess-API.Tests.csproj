@@ -26,6 +26,6 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.3.1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ServerLess-Zip\ServerLess-Zip.csproj" />
+    <ProjectReference Include="..\ServerLess-Zip\ServerLess-API.csproj" />
   </ItemGroup>
 </Project>

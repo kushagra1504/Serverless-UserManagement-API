@@ -23,10 +23,10 @@ namespace ServerLess_Zip.Services
             Logger = logger;
             DDBClient = ddbClient;
 
-            UserTableName = configuration[Startup.AppDDBTableKey];
+            UserTableName = configuration[Startup.DDBUserTableKey];
             if (string.IsNullOrEmpty(UserTableName))
             {
-                var errorMessage = "Missing configuration for DDB UserTable. The AppDDBTable configuration must be set to a DDB UserTable.";
+                var errorMessage = "Missing configuration for DDB UserTable. The DDBUserTable configuration must be set to a DDB UserTable.";
                 Logger.LogCritical(errorMessage);
                 throw new Exception(errorMessage);
             }

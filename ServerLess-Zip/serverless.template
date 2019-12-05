@@ -93,7 +93,7 @@
         ],
         "Environment": {
           "Variables": {
-		  "AppDDBAccountTable": {
+		  "DDBAccountTable": {
               "Fn::If": [
                 "CreateDDBUserTable",
                 {
@@ -104,7 +104,7 @@
                 }
               ]
             },
-            "AppDDBTable": {
+            "DDBUserTable": {
               "Fn::If": [
                 "CreateDDBUserTable",
                 {

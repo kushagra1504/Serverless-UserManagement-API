@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28306.52
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServerLess-Zip", "ServerLess-Zip\ServerLess-Zip.csproj", "{C791978F-F9C8-441A-B647-F63401F366BE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServerLess-API", "ServerLess-Zip\ServerLess-API.csproj", "{C791978F-F9C8-441A-B647-F63401F366BE}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServerLess-Zip.Tests", "ServerLess-Zip.Tests\ServerLess-Zip.Tests.csproj", "{8ED2A37B-A207-4CC2-9079-EA8420EF33E6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServerLess-API.Tests", "ServerLess-Zip.Tests\ServerLess-API.Tests.csproj", "{8ED2A37B-A207-4CC2-9079-EA8420EF33E6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

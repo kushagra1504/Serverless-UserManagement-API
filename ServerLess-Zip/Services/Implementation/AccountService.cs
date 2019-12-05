@@ -22,11 +22,11 @@ namespace ServerLess_Zip.Services
             Logger = logger;
             DDBClient = ddbClient;
 
-            AccountTableName = configuration[Startup.AppDDBAccountTableKey];
+            AccountTableName = configuration[Startup.DDBAccountTableKey];
             if (string.IsNullOrWhiteSpace(AccountTableName))
             {
-                Logger.LogCritical("Missing configuration for DDB AccountTable. The AppDDBAccountTable configuration must be set to a DDB AccountTable.");
-                throw new Exception("Missing configuration for DDB AccountTable. The AppDDBAccountTable configuration must be set to a DDB AccountTable.");
+                Logger.LogCritical("Missing configuration for DDB AccountTable. The DDBAccountTable configuration must be set to a DDB AccountTable.");
+                throw new Exception("Missing configuration for DDB AccountTable. The DDBAccountTable configuration must be set to a DDB AccountTable.");
             }
             else
             {

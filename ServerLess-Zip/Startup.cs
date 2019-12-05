@@ -9,13 +9,19 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ServerLess_Zip.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using ServerLess_API.Authorization;
 
 namespace ServerLess_Zip
 {
     public class Startup
     {
-        public const string AppDDBTableKey = "AppDDBTable";
-        public const string AppDDBAccountTableKey = "AppDDBAccountTable";
+        public const string DDBUserTableKey = "DDBUserTable";
+        public const string DDBAccountTableKey = "DDBAccountTable";
+        public const string CognitoUserPoolId = "CognitoUserPoolId";
+        public const string CognitoAppId = "CognitoAppId";
+        public const string CognitoRegion = "CognitoRegion";
 
         public Startup(IConfiguration configuration)
         {
@@ -34,6 +40,27 @@ namespace ServerLess_Zip
             services.AddAWSService<Amazon.DynamoDBv2.IAmazonDynamoDB>();
             services.AddTransient<IUserService, UserService>();
             services.AddTransient<IAccountService, AccountService>();
+
+            //Cognito authorization provisioning 
+            // add our Cognito group authorization requirement, specifying CalendarWriter as the group
+            services.AddAuthorization(options =>
+            {
+                options.DefaultPolicy = new AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme).RequireAuthenticatedUser().Build();
+                options.AddPolicy("InPowerUserGroup", policy => policy.Requirements.Add(new CognitoGroupAuthRequirement("CalendarWriter")));
+            });
+
+            // add a singleton of our cognito authorization handler
+            services.AddSingleton<IAuthorizationHandler, CognitoGroupAuthHandler>();
+            services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(o =>
+            {
+                o.Audience = Configuration[CognitoAppId];
+                o.Authority = $"https://cognito-idp.{Configuration[CognitoRegion]}.amazonaws.com/{CognitoUserPoolId}";
+                o.RequireHttpsMetadata = false;
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline
