@@ -64,7 +64,7 @@ namespace ServerLess_Zip
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
             if (env.IsDevelopment())
             {
@@ -75,7 +75,16 @@ namespace ServerLess_Zip
                 app.UseHsts();
             }
 
+            loggerFactory.AddLambdaLogger(Configuration.GetLambdaLoggerOptions());
+
+            app.UseDefaultFiles(); //needs to be before the app.UseStaticFiles() call below
+
+            app.UseStaticFiles();
+
+            app.UseAuthentication();
+
             app.UseHttpsRedirection();
+
             app.UseMvc();
         }
     }
